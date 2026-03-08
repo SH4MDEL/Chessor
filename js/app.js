@@ -122,10 +122,56 @@
   }
 
   /**
+   * iOS 인앱 브라우저(KakaoTalk, Instagram 등 WKWebView 기반) 여부를 판정한다.
+   * 네이티브 Safari / iOS Chrome(CriOS)은 UA에 'Safari/'를 포함하지만
+   * 대부분의 인앱 브라우저는 포함하지 않는다.
+   */
+  function isIOSInAppBrowser() {
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/.test(ua) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isNativeBrowser = /Safari\//.test(ua) && !/KAKAOTALK|FBAN|FBAV/i.test(ua);
+    return isIOS && !isNativeBrowser;
+  }
+
+  /**
+   * JSON 문자열을 클립보드에 복사한다.
+   * Clipboard API → execCommand 순으로 시도하며, 둘 다 실패하면 안내 메시지를 띄운다.
+   */
+  function copyJsonToClipboard(json) {
+    const MSG_OK = 'JSON이 클립보드에 복사되었습니다.\n메모장 앱에 붙여넣기 후 .json 파일로 저장해 주세요.';
+    const MSG_FAIL = '복사에 실패했습니다. 브라우저(Safari 등)에서 직접 접속해 주세요.';
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json)
+        .then(function () { alert(MSG_OK); })
+        .catch(function () { legacyCopy(json, MSG_OK, MSG_FAIL); });
+    } else {
+      legacyCopy(json, MSG_OK, MSG_FAIL);
+    }
+  }
+
+  /** document.execCommand('copy') — Clipboard API 미지원 구형 WebView용 폴백 */
+  function legacyCopy(json, msgOk, msgFail) {
+    const ta = document.createElement('textarea');
+    ta.value = json;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      alert(document.execCommand('copy') ? msgOk : msgFail);
+    } catch (e) {
+      alert(msgFail);
+    }
+    document.body.removeChild(ta);
+  }
+
+  /**
    * blob URL + <a download> 방식으로 파일을 저장한다.
    * 데스크톱 Chrome/Firefox/Edge, Android Chrome에서 동작한다.
-   * URL.revokeObjectURL은 다운로드 시작 후 1초 뒤에 호출해
-   * 일부 Android 브라우저에서 URL이 너무 일찍 해제되는 문제를 방지한다.
+   * revokeObjectURL은 1초 뒤 호출해 일부 Android WebView에서
+   * 다운로드 시작 전 URL이 해제되는 문제를 방지한다.
    */
   function blobDownload(json) {
     const blob = new Blob([json], { type: 'application/json' });
@@ -142,22 +188,25 @@
   function onClickExport() {
     const json = Memo.exportJSON();
 
-    // iOS Safari는 <a download> + blob URL을 지원하지 않는다.
-    // Web Share API의 파일 공유(iOS 15+ / Chrome Android 75+)를 먼저 시도하고,
-    // 지원하지 않으면 blob 다운로드로 폴백한다.
+    // ① Web Share API (iOS 15+ 네이티브 Safari, Chrome Android 75+)
     const file = new File([json], 'memos.json', { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file], title: 'Chessor 메모' })
         .catch(function (err) {
-          // AbortError: 사용자가 공유 취소 → 무시
-          // 그 외 오류: blob 다운로드로 폴백
           if (err.name !== 'AbortError') {
-            blobDownload(json);
+            isIOSInAppBrowser() ? copyJsonToClipboard(json) : blobDownload(json);
           }
         });
       return;
     }
 
+    // ② iOS 인앱 브라우저(KakaoTalk 등): <a download>이 동작하지 않으므로 클립보드 복사
+    if (isIOSInAppBrowser()) {
+      copyJsonToClipboard(json);
+      return;
+    }
+
+    // ③ 데스크톱 / Android: 직접 다운로드
     blobDownload(json);
   }
 
