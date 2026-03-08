@@ -58,10 +58,7 @@
       position: 'start',
       onDrop: onDrop,
       onSnapEnd: onSnapEnd,
-      pieceTheme: function (piece) {
-        // 'wP' → 'resources/images/wp.svg'
-        return 'resources/images/' + piece.toLowerCase() + '.svg';
-      },
+      pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/img/chesspieces/wikipedia/{piece}.png',
       width: boardSize,
     });
   }
