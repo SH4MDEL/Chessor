@@ -1,6 +1,6 @@
 /**
  * board.js — chessboard.js + chess.js 연동 모듈
- * 드래그앤드롭(데스크톱) / 클릭-투-무브(터치 기기), 합법성 검증, FEN 동기화, Flip, Undo 처리
+ * 클릭-투-무브(데스크톱·모바일 공통), 합법성 검증, FEN 동기화, Flip, Undo 처리
  */
 (function () {
   'use strict';
@@ -11,22 +11,7 @@
   let onMoveCallback = null;
 
   // ──────────────────────────────────────────────
-  //  데스크톱: 드래그앤드롭
-  // ──────────────────────────────────────────────
-
-  function onDrop(source, target) {
-    if (source === target) return 'snapback';
-    const move = chess.move({ from: source, to: target, promotion: 'q' });
-    if (move === null) return 'snapback';
-    if (typeof onMoveCallback === 'function') onMoveCallback();
-  }
-
-  function onSnapEnd() {
-    board.position(chess.fen());
-  }
-
-  // ──────────────────────────────────────────────
-  //  터치 기기: 클릭-투-무브
+  //  클릭-투-무브 (데스크톱·모바일 공통)
   // ──────────────────────────────────────────────
 
   let selectedSquare = null;
@@ -104,10 +89,25 @@
 
   function initClickMove() {
     const boardEl = document.getElementById('board');
+
+    // 클릭(마우스/터치 공통)
     boardEl.addEventListener('click', function (e) {
       const square = getSquareFromEl(e.target);
       if (square) handleSquareClick(square);
     });
+
+    // 터치 스크롤 차단:
+    // 내 기물을 터치하려는 순간 또는 기물이 이미 선택된 상태에서 터치할 때만 스크롤을 막는다.
+    // passive: false 가 있어야 preventDefault()가 동작한다.
+    boardEl.addEventListener('touchstart', function (e) {
+      const square = getSquareFromEl(e.target);
+      if (!square) return;
+      const piece = chess.get(square);
+      const isMyPiece = piece && piece.color === chess.turn();
+      if (selectedSquare || isMyPiece) {
+        e.preventDefault();
+      }
+    }, { passive: false });
   }
 
   // ──────────────────────────────────────────────
@@ -118,9 +118,8 @@
    * 보드와 chess 엔진을 초기화한다.
    * @param {number} size - 보드 픽셀 크기
    * @param {function} moveCallback - 합법 수 처리 후 호출될 콜백
-   * @param {boolean} useClickMove - true면 클릭-투-무브(터치), false면 드래그앤드롭(마우스)
    */
-  function init(size, moveCallback, useClickMove) {
+  function init(size, moveCallback) {
     boardSize = size;
     onMoveCallback = moveCallback;
 
@@ -129,22 +128,12 @@
     // chessboard.js는 JS 옵션으로 크기를 받지 않고 컨테이너 요소의 CSS 너비를 읽는다.
     document.getElementById('board').style.width = boardSize + 'px';
 
-    if (useClickMove) {
-      board = Chessboard('board', {
-        draggable: false,
-        position: 'start',
-        pieceTheme: 'https://cdn.jsdelivr.net/gh/oakmac/chessboardjs/website/img/chesspieces/wikipedia/{piece}.png',
-      });
-      initClickMove();
-    } else {
-      board = Chessboard('board', {
-        draggable: true,
-        position: 'start',
-        onDrop: onDrop,
-        onSnapEnd: onSnapEnd,
-        pieceTheme: 'https://cdn.jsdelivr.net/gh/oakmac/chessboardjs/website/img/chesspieces/wikipedia/{piece}.png',
-      });
-    }
+    board = Chessboard('board', {
+      draggable: false,
+      position: 'start',
+      pieceTheme: 'https://cdn.jsdelivr.net/gh/oakmac/chessboardjs/website/img/chesspieces/wikipedia/{piece}.png',
+    });
+    initClickMove();
   }
 
   /**

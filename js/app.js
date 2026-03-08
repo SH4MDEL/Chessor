@@ -8,15 +8,6 @@
   const PANEL_WIDTH = 340;
   const PADDING = 24;
 
-  /**
-   * 터치/스타일러스 주 입력 기기 여부.
-   * CSS `(pointer: coarse)` 미디어 쿼리 기반 — 화면 크기가 아닌 입력 장치 종류로 판단.
-   * 마우스(fine)가 주 입력인 터치스크린 노트북은 false를 반환한다.
-   */
-  function isTouchDevice() {
-    return window.matchMedia('(pointer: coarse)').matches;
-  }
-
   /** 세로 방향(portrait) 화면인지 여부 — 보드 크기 계산에만 사용 */
   function isPortrait() {
     return window.innerWidth < window.innerHeight;
@@ -195,8 +186,7 @@
     initCanvas(boardSize);
 
     // 합법 수 처리 후 메모/화살표 갱신 콜백을 Board에 전달
-    // 터치 기기는 드래그 대신 클릭-투-무브 방식 사용
-    Board.init(boardSize, loadMemoForCurrentFen, isTouchDevice());
+    Board.init(boardSize, loadMemoForCurrentFen);
 
     bindButtons();
 
