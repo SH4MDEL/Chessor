@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chessor — 오프닝 공부 도구</title>
+
+    <!-- chessboard.js CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+    />
+
+    <!-- 앱 스타일 -->
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- ── 좌: 체스 보드 영역 ── -->
+      <div id="board-section">
+        <div id="board-container">
+          <!-- chessboard.js 렌더링 대상 -->
+          <div id="board"></div>
+          <!-- 화살표 오버레이 캔버스 -->
+          <canvas id="arrow-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- ── 우: 메모 패널 ── -->
+      <div id="memo-panel">
+        <div id="panel-title">📝 Chessor</div>
+
+        <!-- 메모 텍스트 입력 -->
+        <textarea
+          id="memo-input"
+          placeholder="이 포지션에 대한 메모를 입력하세요.&#10;(자동 저장됩니다)"
+        ></textarea>
+
+        <!-- 정수 / 악수 토글 -->
+        <div class="btn-row">
+          <button id="btn-good" class="active">✔ 정수</button>
+          <button id="btn-bad">✘ 악수</button>
+        </div>
+
+        <hr class="section-divider" />
+
+        <!-- 메모 삭제 -->
+        <button id="btn-clear">🗑 메모 삭제 (Clear)</button>
+
+        <!-- 이전 수 취소 -->
+        <button id="btn-undo">↩ 이전 수 취소 (Undo)</button>
+
+        <!-- 보드 뒤집기 -->
+        <button id="btn-flip">⇄ 보드 뒤집기 (Flip)</button>
+
+        <hr class="section-divider" />
+
+        <!-- JSON 불러오기 / 내보내기 -->
+        <div class="btn-row">
+          <button id="btn-load">📂 Load JSON</button>
+          <button id="btn-export">💾 Export JSON</button>
+        </div>
+
+        <!-- 숨겨진 파일 입력 -->
+        <input type="file" id="file-input" accept=".json" />
+
+        <!-- 현재 FEN 표시 -->
+        <div id="current-fen"></div>
+      </div>
+    </div>
+
+    <!-- ── 외부 라이브러리 ── -->
+    <!-- jQuery (chessboard.js 의존성) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- chess.js — 체스 규칙 엔진 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <!-- chessboard.js — 보드 UI -->
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <!-- ── 앱 모듈 (의존 순서대로) ── -->
+    <script src="js/arrows.js"></script>
+    <script src="js/memo.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

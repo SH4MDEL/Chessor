@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 개발 전용 파일 (웹 배포 불필요)
+main.py
+board.py
+config.py
+assets.py
+memos.py
+ui.py
+font.json
+KoPub Dotum Bold.ttf
+memos.json
+*.cursorrule
+*.cursorignore
+
+# OS
+.DS_Store
+Thumbs.db

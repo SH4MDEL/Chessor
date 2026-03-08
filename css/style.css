@@ -1,0 +1,265 @@
+:root {
+  --bg: #1a1a2e;
+  --panel-bg: #252538;
+  --input-bg: #13131f;
+  --border: #3c3c60;
+  --text: #d0d0e8;
+  --text-dim: #7878a0;
+  --btn-bg: #32325a;
+  --btn-hover: #42427a;
+  --green: #22c55e;
+  --green-dim: #15532e;
+  --red: #ef4444;
+  --red-dim: #7f1d1d;
+  --accent: #5c5caa;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  /* iOS Safari에서 100vh가 주소창 포함 높이로 계산되는 버그 대응 */
+  min-height: -webkit-fill-available;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Layout ---- */
+#app {
+  display: flex;
+  height: 100vh;
+  height: -webkit-fill-available;
+  width: 100vw;
+}
+
+#board-section {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+#board-container {
+  position: relative;
+  display: inline-block;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+#arrow-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ---- Memo Panel ---- */
+#memo-panel {
+  flex: 0 0 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--panel-bg);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+#panel-title {
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+#memo-input {
+  flex: 1 1 auto;
+  min-height: 180px;
+  resize: none;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.75;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#memo-input:focus {
+  border-color: var(--accent);
+}
+
+#memo-input::placeholder {
+  color: var(--text-dim);
+}
+
+/* ---- Buttons ---- */
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-row > button {
+  flex: 1;
+}
+
+button {
+  display: block;
+  width: 100%;
+  background: var(--btn-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: center;
+  user-select: none;
+  /* 터치 최소 탭 영역 확보 */
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+button:hover {
+  background: var(--btn-hover);
+}
+
+button:active {
+  opacity: 0.85;
+}
+
+#btn-good {
+  border-color: #224433;
+}
+
+#btn-bad {
+  border-color: #443322;
+}
+
+#btn-good.active {
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
+  font-weight: bold;
+}
+
+#btn-bad.active {
+  background: var(--red-dim);
+  border-color: var(--red);
+  color: var(--red);
+  font-weight: bold;
+}
+
+/* ---- FEN display ---- */
+#current-fen {
+  font-size: 9px;
+  color: var(--text-dim);
+  word-break: break-all;
+  line-height: 1.4;
+  padding: 4px 2px;
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+/* ---- chessboard.js overrides ---- */
+.board-b72b1 {
+  border: 2px solid #2e2e50 !important;
+}
+
+/* ── 모바일 반응형 (세로 화면 / 좁은 기기) ── */
+@media (orientation: portrait), (max-width: 600px) {
+  html,
+  body {
+    overflow: auto;
+  }
+
+  #app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-y: auto;
+  }
+
+  #board-section {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 8px 0 4px;
+  }
+
+  #memo-panel {
+    flex: 1 1 auto;
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 12px;
+    gap: 6px;
+    /* 패널이 화면 하단을 가득 채우되 스크롤 가능 */
+    overflow-y: auto;
+    max-height: calc(100vh - 60vw);
+  }
+
+  #memo-input {
+    min-height: 80px;
+    font-size: 16px; /* iOS 자동 확대 방지 */
+  }
+
+  button {
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  #panel-title {
+    font-size: 14px;
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+  }
+
+  #current-fen {
+    font-size: 8px;
+  }
+}
+
+/* 가로 방향 모바일 (iPhone 가로) */
+@media (orientation: landscape) and (max-height: 500px) {
+  #memo-panel {
+    flex: 0 0 280px;
+    padding: 10px;
+    gap: 5px;
+  }
+
+  #memo-input {
+    min-height: 80px;
+    font-size: 16px;
+  }
+
+  button {
+    padding: 6px 10px;
+    min-height: 40px;
+    font-size: 12px;
+  }
+}
