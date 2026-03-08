@@ -90,31 +90,29 @@
   function initClickMove() {
     const boardEl = document.getElementById('board');
 
-    // touchstart에서 preventDefault()를 호출하면 이후 click 이벤트가 발생하지 않는다.
-    // 따라서 터치와 마우스 클릭을 분리해서 처리한다.
+    // 터치 이벤트 처리 전략:
+    //   touchstart.preventDefault() → 스크롤 차단 + 이후 합성 click 이벤트 취소
+    //   touchend                    → 실제 이동 처리 (손가락을 뗀 위치 기준)
+    //   click                       → 마우스 전용 (터치 시 touchstart.preventDefault()로 미발생)
+    //
+    // touchstart에서 이동을 처리하면 KakaoTalk 등 인앱 브라우저에서
+    // preventDefault() 이후의 이벤트 체인이 달라져 동작 불일치가 생기므로
+    // touchend에서 changedTouches로 위치를 확인해 처리한다.
 
-    // ① 터치 기기: touchstart에서 직접 처리 + 스크롤 차단
-    //   - 내 기물 터치 또는 기물이 선택된 상태: preventDefault()로 스크롤 막고 바로 이동 처리
-    //   - 그 외(빈 칸·상대 기물): preventDefault() 없이 자연스럽게 통과 (click으로 위임)
-    let touchHandled = false;
     boardEl.addEventListener('touchstart', function (e) {
-      const square = getSquareFromEl(e.target);
-      if (!square) return;
-      const piece = chess.get(square);
-      const isMyPiece = piece && piece.color === chess.turn();
-      if (selectedSquare || isMyPiece) {
-        e.preventDefault();   // 스크롤 차단
-        touchHandled = true;
-        handleSquareClick(square);
-      }
+      e.preventDefault(); // 스크롤 차단
     }, { passive: false });
 
-    // ② 마우스 클릭: 터치로 이미 처리된 경우는 건너뛴다
+    boardEl.addEventListener('touchend', function (e) {
+      const touch = e.changedTouches[0];
+      // changedTouches 위치로 손가락을 뗀 요소를 정확히 파악
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const square = getSquareFromEl(el);
+      if (square) handleSquareClick(square);
+    });
+
+    // 마우스 클릭 (touchstart.preventDefault() 덕분에 터치 시 자동으로 미발생)
     boardEl.addEventListener('click', function (e) {
-      if (touchHandled) {
-        touchHandled = false;
-        return;
-      }
       const square = getSquareFromEl(e.target);
       if (square) handleSquareClick(square);
     });
