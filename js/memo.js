@@ -41,18 +41,31 @@
   }
 
   /**
+   * FEN을 3필드(기물 배치·차례·캐슬링 권리)로 정규화한다.
+   * 앙파상 필드는 chess.js와 타 구현 간 기록 방식이 달라 키 불일치가 생기므로 제거.
+   * 반수 시계·수 번호도 트랜스포지션 처리를 위해 제거.
+   * @param {string} fen
+   * @returns {string}
+   */
+  function normalizeFen(fen) {
+    return fen.split(' ').slice(0, 3).join(' ');
+  }
+
+  /**
    * 외부 JSON 데이터를 memoData로 불러온다.
+   * 키를 4필드 FEN으로 정규화하므로 기존 6필드 키 파일도 호환된다.
    * @param {Object} data - 파싱된 JSON 객체
    */
   function load(data) {
     if (!data || typeof data !== 'object') return;
-    // 구형 포맷(값이 string) 호환 처리
+    // 구형 포맷(값이 string) 및 6필드 FEN 키 호환 처리
     memoData = {};
     for (const [fen, val] of Object.entries(data)) {
+      const key = normalizeFen(fen);
       if (typeof val === 'string') {
-        memoData[fen] = { text: val, quality: 'good' };
+        memoData[key] = { text: val, quality: 'good' };
       } else {
-        memoData[fen] = {
+        memoData[key] = {
           text: val.text || '',
           quality: val.quality === 'bad' ? 'bad' : 'good',
         };

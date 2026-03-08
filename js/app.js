@@ -7,7 +7,20 @@
 
   const PANEL_WIDTH = 340;
   const PADDING = 24;
-  const MOBILE_BREAKPOINT = 600; // px — 이 너비 이하를 모바일(세로) 화면으로 간주
+
+  /**
+   * 터치/스타일러스 주 입력 기기 여부.
+   * CSS `(pointer: coarse)` 미디어 쿼리 기반 — 화면 크기가 아닌 입력 장치 종류로 판단.
+   * 마우스(fine)가 주 입력인 터치스크린 노트북은 false를 반환한다.
+   */
+  function isTouchDevice() {
+    return window.matchMedia('(pointer: coarse)').matches;
+  }
+
+  /** 세로 방향(portrait) 화면인지 여부 — 보드 크기 계산에만 사용 */
+  function isPortrait() {
+    return window.innerWidth < window.innerHeight;
+  }
 
   let currentFen = '';
   let currentQuality = 'good';
@@ -156,21 +169,22 @@
 
   /**
    * 현재 화면 크기에 따라 보드 픽셀 크기를 계산한다.
-   * 모바일(세로): 화면 너비 기준, 상단 60%를 보드에 할당
-   * 데스크톱(가로): 기존 패널 제외 나머지 공간 기준
+   *
+   * 세로(portrait): 가로 폭 전체를 보드에 할당하되 세로 공간의 58% 이내로 제한
+   * 가로(landscape): 뷰포트 높이의 90% + 패널 제외 너비 중 더 작은 값
+   *   → 고정 px 대신 비율로 상한을 두어 북마크 줄·작업 표시줄에 의한
+   *     보드 잘림 현상을 방지한다.
    */
   function calcBoardSize() {
-    const isMobile = window.innerWidth <= MOBILE_BREAKPOINT ||
-                     window.innerWidth < window.innerHeight;
-    if (isMobile) {
-      // 세로 화면: 가로 폭 전체를 보드에 할당하되, 세로 공간의 60%를 넘지 않도록 제한
+    if (isPortrait()) {
       const maxByWidth = window.innerWidth - PADDING;
       const maxByHeight = Math.floor(window.innerHeight * 0.58);
       return Math.floor(Math.min(maxByWidth, maxByHeight) / 8) * 8;
     }
-    return Math.floor(
-      Math.min(window.innerHeight - PADDING, window.innerWidth - PANEL_WIDTH - PADDING) / 8
-    ) * 8;
+    // 데스크톱: 높이는 뷰포트의 90% 이내, 너비는 패널 제외 영역 이내
+    const maxByHeight = Math.floor(window.innerHeight * 0.90);
+    const maxByWidth = window.innerWidth - PANEL_WIDTH - PADDING;
+    return Math.floor(Math.min(maxByHeight, maxByWidth) / 8) * 8;
   }
 
   function init() {
@@ -181,7 +195,8 @@
     initCanvas(boardSize);
 
     // 합법 수 처리 후 메모/화살표 갱신 콜백을 Board에 전달
-    Board.init(boardSize, loadMemoForCurrentFen);
+    // 터치 기기는 드래그 대신 클릭-투-무브 방식 사용
+    Board.init(boardSize, loadMemoForCurrentFen, isTouchDevice());
 
     bindButtons();
 
