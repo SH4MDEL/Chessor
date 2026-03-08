@@ -53,13 +53,15 @@
 
     chess = new Chess();
 
+    // chessboard.js는 JS 옵션으로 크기를 받지 않고 컨테이너 요소의 CSS 너비를 읽는다.
+    document.getElementById('board').style.width = boardSize + 'px';
+
     board = Chessboard('board', {
       draggable: true,
       position: 'start',
       onDrop: onDrop,
       onSnapEnd: onSnapEnd,
-      pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/img/chesspieces/wikipedia/{piece}.png',
-      width: boardSize,
+      pieceTheme: 'https://cdn.jsdelivr.net/gh/oakmac/chessboardjs/website/img/chesspieces/wikipedia/{piece}.png',
     });
   }
 
