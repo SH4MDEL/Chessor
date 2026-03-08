@@ -121,8 +121,13 @@
     e.target.value = ''; // 같은 파일 재선택 허용
   }
 
-  function onClickExport() {
-    const json = Memo.exportJSON();
+  /**
+   * blob URL + <a download> 방식으로 파일을 저장한다.
+   * 데스크톱 Chrome/Firefox/Edge, Android Chrome에서 동작한다.
+   * URL.revokeObjectURL은 다운로드 시작 후 1초 뒤에 호출해
+   * 일부 Android 브라우저에서 URL이 너무 일찍 해제되는 문제를 방지한다.
+   */
+  function blobDownload(json) {
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -131,7 +136,29 @@
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function onClickExport() {
+    const json = Memo.exportJSON();
+
+    // iOS Safari는 <a download> + blob URL을 지원하지 않는다.
+    // Web Share API의 파일 공유(iOS 15+ / Chrome Android 75+)를 먼저 시도하고,
+    // 지원하지 않으면 blob 다운로드로 폴백한다.
+    const file = new File([json], 'memos.json', { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Chessor 메모' })
+        .catch(function (err) {
+          // AbortError: 사용자가 공유 취소 → 무시
+          // 그 외 오류: blob 다운로드로 폴백
+          if (err.name !== 'AbortError') {
+            blobDownload(json);
+          }
+        });
+      return;
+    }
+
+    blobDownload(json);
   }
 
   // ──────────────────────────────────────────────
