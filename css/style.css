@@ -146,6 +146,12 @@ button:active {
   opacity: 0.85;
 }
 
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 #btn-good {
   border-color: #224433;
 }
@@ -166,6 +172,42 @@ button:active {
   border-color: var(--red);
   color: var(--red);
   font-weight: bold;
+}
+
+/* ---- FEN 붙여넣기 입력 ---- */
+#fen-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+#fen-input {
+  flex: 1 1 auto;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  min-height: 44px;
+}
+
+#fen-input:focus {
+  border-color: var(--accent);
+}
+
+#fen-input::placeholder {
+  color: var(--text-dim);
+}
+
+#btn-fen-go {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 8px 14px;
+  font-size: 16px;
 }
 
 /* ---- FEN display ---- */

@@ -48,7 +48,7 @@
         <button id="btn-clear">🗑 메모 삭제 (Clear)</button>
 
         <!-- 이전 수 취소 -->
-        <button id="btn-undo">↩ 이전 수 취소 (Undo)</button>
+        <button id="btn-undo" disabled>↩ 이전 수 취소 (Undo)</button>
 
         <!-- 보드 뒤집기 -->
         <button id="btn-flip">⇄ 보드 뒤집기 (Flip)</button>
@@ -63,6 +63,21 @@
 
         <!-- 숨겨진 파일 입력 -->
         <input type="file" id="file-input" accept=".json" />
+
+        <hr class="section-divider" />
+
+        <!-- FEN 붙여넣기로 포지션 이동 -->
+        <div id="fen-input-row">
+          <input
+            type="text"
+            id="fen-input"
+            placeholder="FEN 또는 대수 기보 붙여넣기 후 Enter"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button id="btn-fen-go">→</button>
+        </div>
 
         <!-- 현재 FEN 표시 -->
         <div id="current-fen"></div>

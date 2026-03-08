@@ -157,6 +157,11 @@
     return true;
   }
 
+  /** 현재 포지션에서 Undo 가능한지 반환한다 */
+  function canUndo() {
+    return chess.history().length > 0;
+  }
+
   /** 보드 방향을 뒤집는다 */
   function flip() {
     board.flip();
@@ -234,13 +239,86 @@
     return result;
   }
 
+  /**
+   * PGN/SAN 기보 문자열에서 실제 수 토큰만 추출한다.
+   * - {주석}, (변형선) 제거
+   * - 수 번호(1. 1... 12.), 결과 마커(1-0 0-1 1/2-1/2 *), 어노테이션(!?등) 제거
+   * @param {string} san
+   * @returns {string[]} 수 토큰 배열
+   */
+  function parseSanTokens(san) {
+    return san
+      .replace(/\{[^}]*\}/g, '')          // {주석} 제거
+      .replace(/\([^)]*\)/g, '')          // (변형선) 제거
+      .replace(/\d+\.\.\./g, '')          // 1... 형식 제거
+      .replace(/\d+\./g, '')              // 1. 형식 제거
+      .replace(/1-0|0-1|1\/2-1\/2|\*/g, '') // 결과 마커 제거
+      .replace(/[!?]+/g, '')              // 어노테이션 제거
+      .trim()
+      .split(/\s+/)
+      .filter(t => t.length > 0);
+  }
+
+  /**
+   * PGN/SAN 기보 문자열을 파싱해 초기 포지션에서 수를 모두 적용한다.
+   * chess.move()를 통해 히스토리가 쌓이므로 Undo가 정상 동작한다.
+   * @param {string} san - PGN 또는 SAN 기보 문자열
+   * @returns {boolean} 모든 수가 합법적이면 true, 아니면 false
+   */
+  function setMoves(san) {
+    const tokens = parseSanTokens(san);
+    if (tokens.length === 0) return false;
+
+    // 임시 인스턴스로 선검증 (실패 시 현재 보드 상태 보존)
+    const temp = new Chess();
+    for (const token of tokens) {
+      if (temp.move(token) === null) return false;
+    }
+
+    // 검증 통과: 실제 체스 엔진에 적용 (reset → move × N)
+    chess.reset();
+    for (const token of tokens) {
+      chess.move(token);
+    }
+
+    board.position(chess.fen(), false);
+    selectedSquare = null;
+    clearHighlights();
+    return true;
+  }
+
+  /**
+   * FEN 문자열로 보드 포지션을 설정한다.
+   * 3·4·5 필드 부분 FEN도 기본값을 보완해 처리한다.
+   * @param {string} fen - 전체 또는 부분 FEN
+   * @returns {boolean} 유효한 FEN이면 true, 아니면 false
+   */
+  function setPosition(fen) {
+    // chess.js가 요구하는 6필드 FEN으로 보완
+    // 기본값: 백 차례, 전체 캐슬링, 앙파상 없음, 반수 0, 수 번호 1
+    const defaults = ['w', 'KQkq', '-', '0', '1'];
+    const parts = fen.trim().split(/\s+/);
+    while (parts.length < 6) parts.push(defaults[parts.length - 1]);
+    const fullFen = parts.join(' ');
+
+    if (!chess.load(fullFen)) return false;
+
+    board.position(chess.fen(), false);
+    selectedSquare = null;
+    clearHighlights();
+    return true;
+  }
+
   window.Board = {
     init,
     undo,
+    canUndo,
     flip,
     getOrientation,
     getFen,
     getBoardSize,
     getMovesWithMemo,
+    setPosition,
+    setMoves,
   };
 })();

@@ -27,6 +27,11 @@
     Arrows.draw(canvas, arrows, Board.getBoardSize(), Board.getOrientation());
   }
 
+  /** Undo 버튼의 활성/비활성 상태를 현재 히스토리에 맞게 갱신 */
+  function syncUndoButton() {
+    document.getElementById('btn-undo').disabled = !Board.canUndo();
+  }
+
   /** Quality 버튼의 활성 상태를 현재 quality에 맞게 갱신 */
   function syncQualityButtons() {
     const btnGood = document.getElementById('btn-good');
@@ -53,6 +58,7 @@
 
     currentQuality = entry.quality || 'good';
     syncQualityButtons();
+    syncUndoButton();
 
     redrawArrows();
   }
@@ -97,6 +103,35 @@
   function onClickFlip() {
     Board.flip();
     redrawArrows();
+  }
+
+  /**
+   * 입력 문자열이 FEN인지 SAN(대수 기보)인지 판별한다.
+   * FEN은 반드시 기물 배치 필드(대소문자 체스 기물·숫자·슬래시)로 시작한다.
+   */
+  function looksLikeFen(raw) {
+    return /^[RNBQKPrnbqkp1-8]{1,8}\//.test(raw);
+  }
+
+  function onFenSubmit() {
+    const input = document.getElementById('fen-input');
+    const raw = input.value.trim();
+    if (!raw) return;
+
+    const ok = looksLikeFen(raw) ? Board.setPosition(raw) : Board.setMoves(raw);
+
+    if (!ok) {
+      alert(
+        '유효하지 않은 입력입니다.\n\n' +
+        'FEN 예시:\n  rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq\n\n' +
+        '대수 기보 예시:\n  1.e4 e5 2.Nf3 Nc6 3.Bb5'
+      );
+      return;
+    }
+
+    input.value = '';
+    loadMemoForCurrentFen();
+    syncUndoButton();
   }
 
   function onClickLoad() {
@@ -229,6 +264,12 @@
     document.getElementById('btn-load').addEventListener('click', onClickLoad);
     document.getElementById('btn-export').addEventListener('click', onClickExport);
     document.getElementById('file-input').addEventListener('change', onFileSelected);
+
+    // FEN 붙여넣기로 포지션 이동
+    document.getElementById('btn-fen-go').addEventListener('click', onFenSubmit);
+    document.getElementById('fen-input').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') onFenSubmit();
+    });
 
     // 메모 입력 시 자동 저장
     document.getElementById('memo-input').addEventListener('input', saveCurrentMemo);
