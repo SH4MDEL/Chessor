@@ -90,24 +90,34 @@
   function initClickMove() {
     const boardEl = document.getElementById('board');
 
-    // 클릭(마우스/터치 공통)
-    boardEl.addEventListener('click', function (e) {
-      const square = getSquareFromEl(e.target);
-      if (square) handleSquareClick(square);
-    });
+    // touchstart에서 preventDefault()를 호출하면 이후 click 이벤트가 발생하지 않는다.
+    // 따라서 터치와 마우스 클릭을 분리해서 처리한다.
 
-    // 터치 스크롤 차단:
-    // 내 기물을 터치하려는 순간 또는 기물이 이미 선택된 상태에서 터치할 때만 스크롤을 막는다.
-    // passive: false 가 있어야 preventDefault()가 동작한다.
+    // ① 터치 기기: touchstart에서 직접 처리 + 스크롤 차단
+    //   - 내 기물 터치 또는 기물이 선택된 상태: preventDefault()로 스크롤 막고 바로 이동 처리
+    //   - 그 외(빈 칸·상대 기물): preventDefault() 없이 자연스럽게 통과 (click으로 위임)
+    let touchHandled = false;
     boardEl.addEventListener('touchstart', function (e) {
       const square = getSquareFromEl(e.target);
       if (!square) return;
       const piece = chess.get(square);
       const isMyPiece = piece && piece.color === chess.turn();
       if (selectedSquare || isMyPiece) {
-        e.preventDefault();
+        e.preventDefault();   // 스크롤 차단
+        touchHandled = true;
+        handleSquareClick(square);
       }
     }, { passive: false });
+
+    // ② 마우스 클릭: 터치로 이미 처리된 경우는 건너뛴다
+    boardEl.addEventListener('click', function (e) {
+      if (touchHandled) {
+        touchHandled = false;
+        return;
+      }
+      const square = getSquareFromEl(e.target);
+      if (square) handleSquareClick(square);
+    });
   }
 
   // ──────────────────────────────────────────────
