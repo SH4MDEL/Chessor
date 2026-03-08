@@ -269,16 +269,21 @@
     const tokens = parseSanTokens(san);
     if (tokens.length === 0) return false;
 
-    // 임시 인스턴스로 선검증 (실패 시 현재 보드 상태 보존)
-    const temp = new Chess();
-    for (const token of tokens) {
-      if (temp.move(token) === null) return false;
-    }
+    // 현재 상태 스냅샷 보존 (검증 실패 시 복원)
+    const savedFen = chess.fen();
+    const savedHistory = chess.history();
 
-    // 검증 통과: 실제 체스 엔진에 적용 (reset → move × N)
     chess.reset();
     for (const token of tokens) {
-      chess.move(token);
+      if (chess.move(token) === null) {
+        // 복원
+        chess.load(savedFen);
+        // chess.js 0.10.x는 load() 시 히스토리가 초기화되므로
+        // savedHistory를 재생해 히스토리도 되살린다
+        chess.reset();
+        savedHistory.forEach(function (m) { chess.move(m); });
+        return false;
+      }
     }
 
     board.position(chess.fen(), false);
